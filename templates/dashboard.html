@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gmail Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .email-row:hover { background-color: #f9fafb; }
+        .priority-bar { transition: width 0.3s ease; }
+        .fade-in { animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .loading-pulse { animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                    <h1 class="text-xl font-bold text-gray-900">Gmail Dashboard</h1>
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <div id="user-info" class="flex items-center gap-2 text-sm text-gray-600">
+                        <span id="user-email" class="loading-pulse">Loading...</span>
+                    </div>
+                    <a href="/logout" class="text-sm text-gray-500 hover:text-gray-700">Logout</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
+            <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="text-lg">📥</span>
+                    <span class="text-xs text-gray-500 uppercase tracking-wide">Inbox</span>
+                </div>
+                <p id="stat-inbox" class="text-2xl font-bold text-gray-900">-</p>
+            </div>
+            <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="text-lg">📬</span>
+                    <span class="text-xs text-gray-500 uppercase tracking-wide">Unread</span>
+                </div>
+                <p id="stat-unread" class="text-2xl font-bold text-blue-600">-</p>
+            </div>
+            <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="text-lg">⭐</span>
+                    <span class="text-xs text-gray-500 uppercase tracking-wide">Starred</span>
+                </div>
+                <p id="stat-starred" class="text-2xl font-bold text-yellow-500">-</p>
+            </div>
+            <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="text-lg">📝</span>
+                    <span class="text-xs text-gray-500 uppercase tracking-wide">Drafts</span>
+                </div>
+                <p id="stat-drafts" class="text-2xl font-bold text-gray-600">-</p>
+            </div>
+            <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="text-lg">📤</span>
+                    <span class="text-xs text-gray-500 uppercase tracking-wide">Sent</span>
+                </div>
+                <p id="stat-sent" class="text-2xl font-bold text-green-600">-</p>
+            </div>
+            <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="text-lg">🚫</span>
+                    <span class="text-xs text-gray-500 uppercase tracking-wide">Spam</span>
+                </div>
+                <p id="stat-spam" class="text-2xl font-bold text-red-500">-</p>
+            </div>
+            <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="text-lg">🗑️</span>
+                    <span class="text-xs text-gray-500 uppercase tracking-wide">Trash</span>
+                </div>
+                <p id="stat-trash" class="text-2xl font-bold text-gray-400">-</p>
+            </div>
+        </div>
+
+        <!-- Interview Schedule Tracker -->
+        <div class="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-xl p-6 shadow-lg mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                        📅 Interview Schedule Tracker
+                    </h2>
+                    <p class="text-white/70 text-sm mt-1">Interview-related emails per week (last 2 months)</p>
+                </div>
+                <div class="flex gap-3">
+                    <div class="bg-white/20 rounded-lg px-4 py-2 text-center">
+                        <p class="text-2xl font-bold text-white" id="interview-this-week">-</p>
+                        <p class="text-xs text-white/70">This Week</p>
+                    </div>
+                    <div class="bg-white/20 rounded-lg px-4 py-2 text-center">
+                        <p class="text-2xl font-bold text-white" id="interview-last-week">-</p>
+                        <p class="text-xs text-white/70">Last Week</p>
+                    </div>
+                    <div class="bg-white/20 rounded-lg px-4 py-2 text-center">
+                        <p class="text-2xl font-bold text-white" id="interview-total">-</p>
+                        <p class="text-xs text-white/70">2 Months</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Weekly Bar Chart -->
+            <div class="bg-white/10 rounded-lg p-4">
+                <div id="interview-chart" class="flex items-end justify-between gap-2 h-32">
+                    <!-- Bars will be populated by JS -->
+                    <div class="flex-1 flex flex-col items-center">
+                        <div class="w-full bg-white/30 rounded-t animate-pulse" style="height: 20px;"></div>
+                        <span class="text-xs text-white/50 mt-2">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Interview Emails -->
+            <div class="mt-4">
+                <button onclick="toggleInterviewDetails()" class="text-white/80 hover:text-white text-sm flex items-center gap-1">
+                    <span id="interview-toggle-icon">▶</span> Show recent interview emails
+                </button>
+                <div id="interview-details" class="hidden mt-3 bg-white/10 rounded-lg p-3 max-h-48 overflow-y-auto">
+                    <div id="interview-list" class="space-y-2">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <!-- Sidebar -->
+            <div class="lg:col-span-1">
+                <!-- Search -->
+                <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-4">
+                    <div class="relative">
+                        <input type="text" id="search-input" placeholder="Search emails..." 
+                            class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <svg class="w-5 h-5 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Folders -->
+                <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-4">
+                    <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Folders</h3>
+                    <nav class="space-y-1">
+                        <button onclick="loadEmails('INBOX')" class="folder-btn w-full flex items-center gap-3 px-3 py-2 text-left rounded-lg hover:bg-gray-50 transition-colors" data-folder="INBOX">
+                            <span>📥</span>
+                            <span class="font-medium text-gray-700">Inbox</span>
+                        </button>
+                        <button onclick="loadEmails('STARRED')" class="folder-btn w-full flex items-center gap-3 px-3 py-2 text-left rounded-lg hover:bg-gray-50 transition-colors" data-folder="STARRED">
+                            <span>⭐</span>
+                            <span class="font-medium text-gray-700">Starred</span>
+                        </button>
+                        <button onclick="loadEmails('IMPORTANT')" class="folder-btn w-full flex items-center gap-3 px-3 py-2 text-left rounded-lg hover:bg-gray-50 transition-colors" data-folder="IMPORTANT">
+                            <span>🔖</span>
+                            <span class="font-medium text-gray-700">Important</span>
+                        </button>
+                        <button onclick="loadEmails('SENT')" class="folder-btn w-full flex items-center gap-3 px-3 py-2 text-left rounded-lg hover:bg-gray-50 transition-colors" data-folder="SENT">
+                            <span>📤</span>
+                            <span class="font-medium text-gray-700">Sent</span>
+                        </button>
+                        <button onclick="loadEmails('DRAFT')" class="folder-btn w-full flex items-center gap-3 px-3 py-2 text-left rounded-lg hover:bg-gray-50 transition-colors" data-folder="DRAFT">
+                            <span>📝</span>
+                            <span class="font-medium text-gray-700">Drafts</span>
+                        </button>
+                        <button onclick="loadEmails('SPAM')" class="folder-btn w-full flex items-center gap-3 px-3 py-2 text-left rounded-lg hover:bg-gray-50 transition-colors" data-folder="SPAM">
+                            <span>🚫</span>
+                            <span class="font-medium text-gray-700">Spam</span>
+                        </button>
+                        <button onclick="loadEmails('TRASH')" class="folder-btn w-full flex items-center gap-3 px-3 py-2 text-left rounded-lg hover:bg-gray-50 transition-colors" data-folder="TRASH">
+                            <span>🗑️</span>
+                            <span class="font-medium text-gray-700">Trash</span>
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Quick Filters -->
+                <div class="bg-gradient-to-br from-green-500 to-teal-600 rounded-xl p-4 shadow-sm text-white mb-4">
+                    <h3 class="text-sm font-semibold uppercase tracking-wide mb-3 opacity-90">💼 Quick Filters</h3>
+                    <div class="space-y-2">
+                        <button onclick="searchJobEmails()" id="jobs-filter-btn" class="w-full flex items-center gap-3 px-3 py-2 text-left rounded-lg bg-white/10 hover:bg-white/20 transition-colors">
+                            <span>💼</span>
+                            <span class="font-medium">Job Related</span>
+                        </button>
+                        <button onclick="searchEmails('interview OR assessment OR coding test')" class="w-full flex items-center gap-3 px-3 py-2 text-left rounded-lg bg-white/10 hover:bg-white/20 transition-colors">
+                            <span>📝</span>
+                            <span class="font-medium">Interviews</span>
+                        </button>
+                        <button onclick="searchEmails('offer OR compensation OR salary')" class="w-full flex items-center gap-3 px-3 py-2 text-left rounded-lg bg-white/10 hover:bg-white/20 transition-colors">
+                            <span>🎉</span>
+                            <span class="font-medium">Offers</span>
+                        </button>
+                        <button onclick="loadEmails('INBOX')" class="w-full flex items-center gap-3 px-3 py-2 text-left rounded-lg bg-white/10 hover:bg-white/20 transition-colors">
+                            <span>🔄</span>
+                            <span class="font-medium">Clear Filter</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Category Filter -->
+                <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-4">
+                    <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Categories</h3>
+                    <div id="category-filters" class="space-y-2">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Focus Mode -->
+                <div class="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl p-4 shadow-sm text-white">
+                    <h3 class="text-sm font-semibold uppercase tracking-wide mb-3 opacity-90">🎯 Focus Mode</h3>
+                    <div class="space-y-2">
+                        <button onclick="showDigest()" class="w-full flex items-center gap-3 px-3 py-2 text-left rounded-lg bg-white/10 hover:bg-white/20 transition-colors">
+                            <span>📊</span>
+                            <span class="font-medium">Daily Digest</span>
+                        </button>
+                        <button onclick="showSnoozed()" class="w-full flex items-center gap-3 px-3 py-2 text-left rounded-lg bg-white/10 hover:bg-white/20 transition-colors">
+                            <span>😴</span>
+                            <span class="font-medium">Snoozed</span>
+                            <span id="snoozed-count" class="ml-auto bg-white/20 px-2 py-0.5 rounded-full text-xs">0</span>
+                        </button>
+                        <button onclick="showReminders()" class="w-full flex items-center gap-3 px-3 py-2 text-left rounded-lg bg-white/10 hover:bg-white/20 transition-colors">
+                            <span>⏰</span>
+                            <span class="font-medium">Reminders</span>
+                            <span id="reminders-count" class="ml-auto bg-white/20 px-2 py-0.5 rounded-full text-xs">0</span>
+                        </button>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-white/20">
+                        <p class="text-xs opacity-75 mb-1">Inbox Zero Progress</p>
+                        <div class="w-full h-2 bg-white/20 rounded-full overflow-hidden">
+                            <div id="inbox-zero-bar" class="h-full bg-white rounded-full transition-all" style="width: 0%"></div>
+                        </div>
+                        <p id="inbox-zero-text" class="text-xs mt-1 opacity-75">Loading...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Email List -->
+            <div class="lg:col-span-3">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                        <h2 id="current-folder" class="font-semibold text-gray-900">📥 Inbox</h2>
+                        <button onclick="loadEmails()" class="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            Refresh
+                        </button>
+                    </div>
+                    
+                    <div id="email-list" class="divide-y divide-gray-100">
+                        <!-- Loading state -->
+                        <div class="p-8 text-center">
+                            <div class="loading-pulse">
+                                <svg class="w-12 h-12 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                </svg>
+                                <p class="text-gray-500">Loading emails...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Email Detail Modal -->
+    <div id="email-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                <h3 id="modal-subject" class="font-semibold text-gray-900 truncate">Email Subject</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold" id="modal-avatar">A</div>
+                    <div class="flex-1">
+                        <p id="modal-from" class="font-medium text-gray-900">Sender Name</p>
+                        <p id="modal-to" class="text-sm text-gray-500">To: me</p>
+                    </div>
+                    <p id="modal-date" class="text-sm text-gray-500">Date</p>
+                </div>
+            </div>
+            <div id="modal-body" class="flex-1 overflow-y-auto p-6">
+                <p class="text-gray-700 whitespace-pre-wrap">Loading...</p>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-100 flex flex-wrap gap-2">
+                <button id="modal-star-btn" onclick="toggleStar()" class="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                    <span>⭐</span> Star
+                </button>
+                <button onclick="archiveEmail()" class="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                    <span>📁</span> Archive
+                </button>
+                <div class="relative">
+                    <button onclick="toggleSnoozeMenu()" class="flex items-center gap-2 px-4 py-2 bg-purple-50 hover:bg-purple-100 text-purple-600 rounded-lg transition-colors">
+                        <span>😴</span> Snooze
+                    </button>
+                    <div id="snooze-menu" class="hidden absolute bottom-full left-0 mb-2 bg-white rounded-lg shadow-xl border border-gray-200 py-2 w-48 z-10">
+                        <button onclick="snoozeEmail('1h')" class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50">⏰ In 1 hour</button>
+                        <button onclick="snoozeEmail('3h')" class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50">⏰ In 3 hours</button>
+                        <button onclick="snoozeEmail('tomorrow')" class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50">🌅 Tomorrow morning</button>
+                        <button onclick="snoozeEmail('weekend')" class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50">📅 This weekend</button>
+                        <button onclick="snoozeEmail('nextweek')" class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50">📆 Next week</button>
+                    </div>
+                </div>
+                <button onclick="showReminderDialog()" class="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors">
+                    <span>⏰</span> Remind
+                </button>
+                <button onclick="trashEmail()" class="flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors">
+                    <span>🗑️</span> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Digest Modal -->
+    <div id="digest-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-purple-500 to-indigo-600 text-white">
+                <h3 class="font-semibold">📊 Daily Digest</h3>
+                <button onclick="closeDigestModal()" class="text-white/80 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div id="digest-content" class="flex-1 overflow-y-auto p-6">
+                <p class="text-gray-500 loading-pulse text-center">Loading digest...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Snoozed Modal -->
+    <div id="snoozed-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                <h3 class="font-semibold text-gray-900">😴 Snoozed Emails</h3>
+                <button onclick="closeSnoozedModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div id="snoozed-content" class="flex-1 overflow-y-auto p-6">
+                <p class="text-gray-500 text-center">No snoozed emails</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reminders Modal -->
+    <div id="reminders-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                <h3 class="font-semibold text-gray-900">⏰ Reminders</h3>
+                <button onclick="closeRemindersModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div id="reminders-content" class="flex-1 overflow-y-auto p-6">
+                <p class="text-gray-500 text-center">No reminders set</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reminder Dialog -->
+    <div id="reminder-dialog" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6">
+            <h3 class="font-semibold text-gray-900 mb-4">⏰ Set Reminder</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">When</label>
+                    <input type="datetime-local" id="reminder-time" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Note (optional)</label>
+                    <input type="text" id="reminder-note" placeholder="Add a note..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+            </div>
+            <div class="flex gap-2 mt-6">
+                <button onclick="closeReminderDialog()" class="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">Cancel</button>
+                <button onclick="saveReminder()" class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">Set Reminder</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentFolder = 'INBOX';
+        let currentEmailId = null;
+        let emails = [];
+        let activeCategories = new Set();
+
+        let interviewData = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProfile();
+            loadStats();
+            loadEmails('INBOX');
+            loadFocusStats();
+            loadInterviewStats();
+            
+            // Search handler
+            document.getElementById('search-input').addEventListener('keyup', debounce((e) => {
+                if (e.key === 'Enter' || e.target.value.length > 2) {
+                    searchEmails(e.target.value);
+                }
+            }, 500));
+
+            // Check for due reminders every minute
+            setInterval(checkDueReminders, 60000);
+            checkDueReminders();
+        });
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => { clearTimeout(timeout); func(...args); };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        async function loadProfile() {
+            try {
+                const res = await fetch('/api/profile');
+                const data = await res.json();
+                document.getElementById('user-email').textContent = data.emailAddress;
+                document.getElementById('user-email').classList.remove('loading-pulse');
+            } catch (err) {
+                console.error('Failed to load profile:', err);
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const res = await fetch('/api/stats');
+                const data = await res.json();
+                document.getElementById('stat-inbox').textContent = data.inbox.toLocaleString();
+                document.getElementById('stat-unread').textContent = data.unread.toLocaleString();
+                document.getElementById('stat-starred').textContent = data.starred.toLocaleString();
+                document.getElementById('stat-drafts').textContent = data.drafts.toLocaleString();
+                document.getElementById('stat-sent').textContent = data.sent.toLocaleString();
+                document.getElementById('stat-spam').textContent = data.spam.toLocaleString();
+                document.getElementById('stat-trash').textContent = data.trash.toLocaleString();
+            } catch (err) {
+                console.error('Failed to load stats:', err);
+            }
+        }
+
+        async function loadInterviewStats() {
+            try {
+                const res = await fetch('/api/interview-stats');
+                const data = await res.json();
+                interviewData = data;
+                
+                // Update summary stats
+                document.getElementById('interview-this-week').textContent = data.this_week || 0;
+                document.getElementById('interview-last-week').textContent = data.last_week || 0;
+                document.getElementById('interview-total').textContent = data.total || 0;
+                
+                // Render bar chart
+                renderInterviewChart(data.weeks || []);
+                
+                // Render details list
+                renderInterviewDetails(data.details || []);
+            } catch (err) {
+                console.error('Failed to load interview stats:', err);
+                document.getElementById('interview-chart').innerHTML = `
+                    <div class="flex-1 text-center text-white/50 text-sm">Failed to load interview data</div>
+                `;
+            }
+        }
+
+        function renderInterviewChart(weeks) {
+            const chart = document.getElementById('interview-chart');
+            
+            if (weeks.length === 0) {
+                chart.innerHTML = `
+                    <div class="flex-1 text-center text-white/70 text-sm py-8">
+                        No data available for the last 2 months
+                    </div>
+                `;
+                return;
+            }
+            
+            const maxCount = Math.max(...weeks.map(w => w.count), 1);
+            
+            chart.innerHTML = weeks.map((week, index) => {
+                const height = week.count > 0 ? Math.max((week.count / maxCount) * 80, 15) : 4;
+                const isCurrentWeek = index === weeks.length - 1;
+                const isLastWeek = index === weeks.length - 2;
+                const hasEmails = week.count > 0;
+                
+                let barColor = 'bg-white/60';
+                if (isCurrentWeek) barColor = 'bg-yellow-300';
+                else if (isLastWeek) barColor = 'bg-blue-300';
+                else if (hasEmails) barColor = 'bg-white/80';
+                
+                return `
+                    <div class="flex-1 flex flex-col items-center group cursor-pointer min-w-0" onclick="searchEmails('interview after:${week.label.replace(' ', '/')}')">
+                        <div class="text-lg font-bold ${isCurrentWeek ? 'text-yellow-300' : isLastWeek ? 'text-blue-300' : 'text-white'} mb-1">
+                            ${week.count}
+                        </div>
+                        <div class="relative w-full flex-1 flex items-end">
+                            <div class="w-full ${barColor} rounded-t transition-all hover:opacity-100 ${hasEmails ? '' : 'opacity-30'}" 
+                                 style="height: ${height}px;">
+                            </div>
+                        </div>
+                        <div class="mt-2 text-center">
+                            <span class="text-xs ${isCurrentWeek ? 'font-bold text-yellow-300' : isLastWeek ? 'text-blue-300' : 'text-white/70'} block">${week.label}</span>
+                            <span class="text-[10px] ${isCurrentWeek ? 'text-yellow-300/70' : 'text-white/50'}">${isCurrentWeek ? 'This Week' : isLastWeek ? 'Last Week' : ''}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderInterviewDetails(details) {
+            const list = document.getElementById('interview-list');
+            
+            if (details.length === 0) {
+                list.innerHTML = '<p class="text-white/50 text-sm">No recent interview emails</p>';
+                return;
+            }
+            
+            list.innerHTML = details.map(item => `
+                <div class="flex items-center gap-3 p-2 rounded hover:bg-white/10 cursor-pointer" onclick="openEmail('${item.id}')">
+                    <span class="text-lg">📅</span>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-white text-sm font-medium truncate">${escapeHtml(item.subject)}</p>
+                        <p class="text-white/60 text-xs truncate">${escapeHtml(item.sender)} • ${item.date}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleInterviewDetails() {
+            const details = document.getElementById('interview-details');
+            const icon = document.getElementById('interview-toggle-icon');
+            
+            if (details.classList.contains('hidden')) {
+                details.classList.remove('hidden');
+                icon.textContent = '▼';
+            } else {
+                details.classList.add('hidden');
+                icon.textContent = '▶';
+            }
+        }
+
+        async function loadEmails(folder = currentFolder) {
+            currentFolder = folder;
+            updateFolderUI(folder);
+            
+            const emailList = document.getElementById('email-list');
+            emailList.innerHTML = `
+                <div class="p-8 text-center">
+                    <div class="loading-pulse">
+                        <svg class="w-12 h-12 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                        </svg>
+                        <p class="text-gray-500">Loading emails...</p>
+                    </div>
+                </div>
+            `;
+
+            try {
+                const res = await fetch(`/api/emails?label=${folder}&max=25`);
+                const data = await res.json();
+                emails = data.emails || [];
+                renderEmails(emails);
+                updateCategoryFilters(emails);
+            } catch (err) {
+                console.error('Failed to load emails:', err);
+                emailList.innerHTML = `
+                    <div class="p-8 text-center">
+                        <p class="text-red-500">Failed to load emails. Please try again.</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function searchEmails(query) {
+            if (!query.trim()) {
+                loadEmails(currentFolder);
+                return;
+            }
+
+            const emailList = document.getElementById('email-list');
+            emailList.innerHTML = `
+                <div class="p-8 text-center">
+                    <div class="loading-pulse">
+                        <p class="text-gray-500">Searching...</p>
+                    </div>
+                </div>
+            `;
+
+            try {
+                const res = await fetch(`/api/emails?q=${encodeURIComponent(query)}&max=25`);
+                const data = await res.json();
+                emails = data.emails || [];
+                renderEmails(emails);
+                document.getElementById('current-folder').textContent = `🔍 Search: "${query}"`;
+            } catch (err) {
+                console.error('Search failed:', err);
+            }
+        }
+
+        async function searchJobEmails() {
+            // Comprehensive job-related search query
+            const jobQuery = 'subject:(job OR career OR hiring OR position OR opportunity OR application OR recruiter OR recruitment OR interview OR offer OR resume OR CV OR candidate OR employment OR "job opening" OR "we are hiring" OR "job application" OR "your application" OR "thank you for applying" OR "next steps" OR assessment OR "coding challenge" OR "technical interview" OR onboarding OR "background check" OR "start date")';
+            
+            const emailList = document.getElementById('email-list');
+            emailList.innerHTML = `
+                <div class="p-8 text-center">
+                    <div class="loading-pulse">
+                        <p class="text-gray-500">🔍 Finding job-related emails...</p>
+                    </div>
+                </div>
+            `;
+
+            try {
+                const res = await fetch(`/api/emails?q=${encodeURIComponent(jobQuery)}&max=50`);
+                const data = await res.json();
+                emails = data.emails || [];
+                renderEmails(emails);
+                document.getElementById('current-folder').textContent = `💼 Job Related Emails (${emails.length})`;
+            } catch (err) {
+                console.error('Job search failed:', err);
+                emailList.innerHTML = `
+                    <div class="p-8 text-center">
+                        <p class="text-red-500">Failed to search. Please try again.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function updateFolderUI(folder) {
+            const folderNames = {
+                'INBOX': '📥 Inbox',
+                'STARRED': '⭐ Starred',
+                'IMPORTANT': '🔖 Important',
+                'SENT': '📤 Sent',
+                'DRAFT': '📝 Drafts',
+                'SPAM': '🚫 Spam',
+                'TRASH': '🗑️ Trash'
+            };
+            document.getElementById('current-folder').textContent = folderNames[folder] || folder;
+            
+            document.querySelectorAll('.folder-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-50', 'text-blue-600');
+                if (btn.dataset.folder === folder) {
+                    btn.classList.add('bg-blue-50', 'text-blue-600');
+                }
+            });
+        }
+
+        function renderEmails(emailsToRender) {
+            const emailList = document.getElementById('email-list');
+            
+            // Filter by active categories
+            let filtered = emailsToRender;
+            if (activeCategories.size > 0) {
+                filtered = emailsToRender.filter(e => activeCategories.has(e.category.name));
+            }
+
+            if (filtered.length === 0) {
+                emailList.innerHTML = `
+                    <div class="p-8 text-center">
+                        <svg class="w-16 h-16 text-gray-200 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                        </svg>
+                        <p class="text-gray-500">No emails found</p>
+                    </div>
+                `;
+                return;
+            }
+
+            emailList.innerHTML = filtered.map((email, index) => `
+                <div class="email-row p-4 cursor-pointer transition-colors fade-in ${email.unread ? 'bg-blue-50/50' : ''}" 
+                     style="animation-delay: ${index * 30}ms"
+                     onclick="openEmail('${email.id}')">
+                    <div class="flex items-start gap-4">
+                        <div class="flex-shrink-0 flex flex-col items-center gap-2">
+                            <button onclick="event.stopPropagation(); quickStar('${email.id}', ${email.starred})" 
+                                    class="text-xl hover:scale-110 transition-transform">
+                                ${email.starred ? '⭐' : '☆'}
+                            </button>
+                            <div class="w-2 h-2 rounded-full ${email.unread ? 'bg-blue-500' : 'bg-transparent'}"></div>
+                        </div>
+                        
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="font-semibold text-gray-900 truncate ${email.unread ? '' : 'font-normal'}">${escapeHtml(email.sender_name)}</span>
+                                <span class="text-xs px-2 py-0.5 rounded-full text-white" style="background-color: ${email.category.color}">
+                                    ${email.category.icon} ${email.category.name}
+                                </span>
+                            </div>
+                            <p class="text-gray-900 truncate ${email.unread ? 'font-medium' : ''}">${escapeHtml(email.subject)}</p>
+                            <p class="text-sm text-gray-500 truncate mt-1">${escapeHtml(email.snippet)}</p>
+                        </div>
+                        
+                        <div class="flex-shrink-0 text-right">
+                            <p class="text-xs text-gray-500 mb-2">${email.date_display}</p>
+                            <div class="flex items-center gap-1">
+                                <span class="text-xs text-gray-400">Priority</span>
+                                <div class="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                                    <div class="priority-bar h-full rounded-full ${getPriorityColor(email.priority)}" style="width: ${email.priority}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateCategoryFilters(emails) {
+            const categories = {};
+            emails.forEach(e => {
+                const cat = e.category.name;
+                if (!categories[cat]) {
+                    categories[cat] = { ...e.category, count: 0 };
+                }
+                categories[cat].count++;
+            });
+
+            const container = document.getElementById('category-filters');
+            container.innerHTML = Object.values(categories).map(cat => `
+                <label class="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-gray-50">
+                    <input type="checkbox" class="rounded text-blue-600" 
+                           onchange="toggleCategory('${cat.name}')"
+                           ${activeCategories.has(cat.name) ? 'checked' : ''}>
+                    <span class="text-lg">${cat.icon}</span>
+                    <span class="flex-1 text-sm text-gray-700">${cat.name}</span>
+                    <span class="text-xs text-gray-400">${cat.count}</span>
+                </label>
+            `).join('');
+        }
+
+        function toggleCategory(category) {
+            if (activeCategories.has(category)) {
+                activeCategories.delete(category);
+            } else {
+                activeCategories.add(category);
+            }
+            renderEmails(emails);
+        }
+
+        function getPriorityColor(priority) {
+            if (priority >= 80) return 'bg-red-500';
+            if (priority >= 60) return 'bg-orange-500';
+            if (priority >= 40) return 'bg-yellow-500';
+            return 'bg-green-500';
+        }
+
+        async function openEmail(emailId) {
+            currentEmailId = emailId;
+            document.getElementById('email-modal').classList.remove('hidden');
+            document.getElementById('modal-body').innerHTML = '<p class="text-gray-500 loading-pulse">Loading...</p>';
+
+            try {
+                const res = await fetch(`/api/email/${emailId}`);
+                const data = await res.json();
+                
+                document.getElementById('modal-subject').textContent = data.subject || '(No Subject)';
+                document.getElementById('modal-from').textContent = data.from;
+                document.getElementById('modal-to').textContent = `To: ${data.to}`;
+                document.getElementById('modal-date').textContent = data.date;
+                document.getElementById('modal-avatar').textContent = (data.from || 'A')[0].toUpperCase();
+                document.getElementById('modal-body').innerHTML = `<pre class="whitespace-pre-wrap font-sans text-gray-700">${escapeHtml(data.body || 'No content')}</pre>`;
+                
+                // Mark as read
+                await fetch(`/api/email/${emailId}/read`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'read' })
+                });
+                
+                // Update UI
+                const emailInList = emails.find(e => e.id === emailId);
+                if (emailInList) {
+                    emailInList.unread = false;
+                    renderEmails(emails);
+                }
+                loadStats();
+            } catch (err) {
+                console.error('Failed to load email:', err);
+                document.getElementById('modal-body').innerHTML = '<p class="text-red-500">Failed to load email</p>';
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('email-modal').classList.add('hidden');
+            currentEmailId = null;
+        }
+
+        async function quickStar(emailId, isStarred) {
+            try {
+                await fetch(`/api/email/${emailId}/star`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: isStarred ? 'remove' : 'add' })
+                });
+                
+                const email = emails.find(e => e.id === emailId);
+                if (email) {
+                    email.starred = !isStarred;
+                    renderEmails(emails);
+                }
+                loadStats();
+            } catch (err) {
+                console.error('Failed to star email:', err);
+            }
+        }
+
+        async function toggleStar() {
+            if (!currentEmailId) return;
+            const email = emails.find(e => e.id === currentEmailId);
+            if (email) {
+                await quickStar(currentEmailId, email.starred);
+            }
+        }
+
+        async function archiveEmail() {
+            if (!currentEmailId) return;
+            try {
+                await fetch(`/api/email/${currentEmailId}/archive`, { method: 'POST' });
+                closeModal();
+                loadEmails();
+                loadStats();
+            } catch (err) {
+                console.error('Failed to archive:', err);
+            }
+        }
+
+        async function trashEmail() {
+            if (!currentEmailId) return;
+            try {
+                await fetch(`/api/email/${currentEmailId}/trash`, { method: 'POST' });
+                closeModal();
+                loadEmails();
+                loadStats();
+            } catch (err) {
+                console.error('Failed to trash:', err);
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+
+        // Close modal on escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+                closeDigestModal();
+                closeSnoozedModal();
+                closeRemindersModal();
+                closeReminderDialog();
+            }
+        });
+
+        // Close modal on backdrop click
+        document.getElementById('email-modal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) closeModal();
+        });
+
+        // ============ FOCUS MODE FUNCTIONS ============
+
+        async function loadFocusStats() {
+            try {
+                const [focusRes, snoozedRes, remindersRes] = await Promise.all([
+                    fetch('/api/focus/stats'),
+                    fetch('/api/snoozed'),
+                    fetch('/api/reminders')
+                ]);
+                
+                const focusData = await focusRes.json();
+                const snoozedData = await snoozedRes.json();
+                const remindersData = await remindersRes.json();
+                
+                // Update counts
+                document.getElementById('snoozed-count').textContent = snoozedData.snoozed?.length || 0;
+                document.getElementById('reminders-count').textContent = 
+                    (remindersData.active?.length || 0) + (remindersData.due?.length || 0);
+                
+                // Update inbox zero progress
+                const progress = focusData.inbox_zero_progress || 0;
+                document.getElementById('inbox-zero-bar').style.width = `${progress}%`;
+                document.getElementById('inbox-zero-text').textContent = 
+                    progress >= 90 ? '🎉 Almost there!' : 
+                    progress >= 50 ? `${progress}% - Keep going!` : 
+                    `${progress}% - ${focusData.unread_count} unread`;
+            } catch (err) {
+                console.error('Failed to load focus stats:', err);
+            }
+        }
+
+        async function checkDueReminders() {
+            try {
+                const res = await fetch('/api/reminders');
+                const data = await res.json();
+                
+                if (data.due && data.due.length > 0) {
+                    // Show notification for due reminders
+                    const count = data.due.length;
+                    if (Notification.permission === 'granted') {
+                        new Notification(`📬 ${count} reminder${count > 1 ? 's' : ''} due!`, {
+                            body: 'Click to view your reminders'
+                        });
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to check reminders:', err);
+            }
+        }
+
+        // Snooze functions
+        function toggleSnoozeMenu() {
+            const menu = document.getElementById('snooze-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        async function snoozeEmail(duration) {
+            if (!currentEmailId) return;
+            
+            let snoozeUntil = new Date();
+            switch(duration) {
+                case '1h':
+                    snoozeUntil.setHours(snoozeUntil.getHours() + 1);
+                    break;
+                case '3h':
+                    snoozeUntil.setHours(snoozeUntil.getHours() + 3);
+                    break;
+                case 'tomorrow':
+                    snoozeUntil.setDate(snoozeUntil.getDate() + 1);
+                    snoozeUntil.setHours(9, 0, 0, 0);
+                    break;
+                case 'weekend':
+                    const daysUntilSat = (6 - snoozeUntil.getDay() + 7) % 7 || 7;
+                    snoozeUntil.setDate(snoozeUntil.getDate() + daysUntilSat);
+                    snoozeUntil.setHours(10, 0, 0, 0);
+                    break;
+                case 'nextweek':
+                    const daysUntilMon = (8 - snoozeUntil.getDay()) % 7 || 7;
+                    snoozeUntil.setDate(snoozeUntil.getDate() + daysUntilMon);
+                    snoozeUntil.setHours(9, 0, 0, 0);
+                    break;
+            }
+            
+            try {
+                await fetch(`/api/email/${currentEmailId}/snooze`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ until: snoozeUntil.toISOString() })
+                });
+                
+                document.getElementById('snooze-menu').classList.add('hidden');
+                closeModal();
+                loadEmails();
+                loadFocusStats();
+                alert(`😴 Email snoozed until ${snoozeUntil.toLocaleString()}`);
+            } catch (err) {
+                console.error('Failed to snooze:', err);
+            }
+        }
+
+        // Reminder functions
+        function showReminderDialog() {
+            const dialog = document.getElementById('reminder-dialog');
+            const timeInput = document.getElementById('reminder-time');
+            
+            // Set default to 1 hour from now
+            const defaultTime = new Date();
+            defaultTime.setHours(defaultTime.getHours() + 1);
+            timeInput.value = defaultTime.toISOString().slice(0, 16);
+            
+            dialog.classList.remove('hidden');
+        }
+
+        function closeReminderDialog() {
+            document.getElementById('reminder-dialog').classList.add('hidden');
+        }
+
+        async function saveReminder() {
+            if (!currentEmailId) return;
+            
+            const time = document.getElementById('reminder-time').value;
+            const note = document.getElementById('reminder-note').value;
+            
+            if (!time) {
+                alert('Please select a time');
+                return;
+            }
+            
+            try {
+                await fetch(`/api/email/${currentEmailId}/reminder`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ time: new Date(time).toISOString(), note })
+                });
+                
+                closeReminderDialog();
+                closeModal();
+                loadFocusStats();
+                alert(`⏰ Reminder set for ${new Date(time).toLocaleString()}`);
+            } catch (err) {
+                console.error('Failed to set reminder:', err);
+            }
+        }
+
+        // Digest modal
+        async function showDigest() {
+            document.getElementById('digest-modal').classList.remove('hidden');
+            document.getElementById('digest-content').innerHTML = '<p class="text-gray-500 loading-pulse text-center">Loading digest...</p>';
+            
+            try {
+                const res = await fetch('/api/digest');
+                const data = await res.json();
+                
+                let categoriesHtml = Object.entries(data.by_category || {}).map(([name, cat]) => `
+                    <div class="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                        <span>${cat.icon}</span>
+                        <span class="flex-1">${name}</span>
+                        <span class="font-semibold">${cat.count}</span>
+                    </div>
+                `).join('');
+                
+                let sendersHtml = Object.entries(data.top_senders || {}).map(([name, count]) => `
+                    <div class="flex items-center gap-2 p-2">
+                        <div class="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                            ${name[0]?.toUpperCase() || '?'}
+                        </div>
+                        <span class="flex-1 truncate">${name}</span>
+                        <span class="text-gray-500">${count} emails</span>
+                    </div>
+                `).join('');
+                
+                let actionHtml = (data.action_required || []).map(item => `
+                    <div class="p-3 bg-red-50 rounded-lg border border-red-100 cursor-pointer hover:bg-red-100" onclick="closeDigestModal(); openEmail('${item.id}')">
+                        <p class="font-medium text-red-800">${escapeHtml(item.subject)}</p>
+                        <p class="text-sm text-red-600">${escapeHtml(item.sender)}</p>
+                    </div>
+                `).join('') || '<p class="text-gray-500 text-sm">No urgent items today! 🎉</p>';
+                
+                document.getElementById('digest-content').innerHTML = `
+                    <div class="space-y-6">
+                        <div class="text-center pb-4 border-b">
+                            <p class="text-sm text-gray-500">${data.date}</p>
+                            <p class="text-4xl font-bold text-gray-900 mt-2">${data.total}</p>
+                            <p class="text-gray-500">emails today</p>
+                            <p class="text-blue-600 font-medium mt-1">${data.unread} unread</p>
+                        </div>
+                        
+                        <div>
+                            <h4 class="font-semibold text-gray-900 mb-3">📁 By Category</h4>
+                            <div class="grid grid-cols-2 gap-2">${categoriesHtml || '<p class="text-gray-500 col-span-2">No emails yet</p>'}</div>
+                        </div>
+                        
+                        <div>
+                            <h4 class="font-semibold text-gray-900 mb-3">👥 Top Senders</h4>
+                            <div class="space-y-1">${sendersHtml || '<p class="text-gray-500">No senders yet</p>'}</div>
+                        </div>
+                        
+                        <div>
+                            <h4 class="font-semibold text-gray-900 mb-3">🔥 Action Required</h4>
+                            <div class="space-y-2">${actionHtml}</div>
+                        </div>
+                    </div>
+                `;
+            } catch (err) {
+                console.error('Failed to load digest:', err);
+                document.getElementById('digest-content').innerHTML = '<p class="text-red-500 text-center">Failed to load digest</p>';
+            }
+        }
+
+        function closeDigestModal() {
+            document.getElementById('digest-modal').classList.add('hidden');
+        }
+
+        // Snoozed modal
+        async function showSnoozed() {
+            document.getElementById('snoozed-modal').classList.remove('hidden');
+            document.getElementById('snoozed-content').innerHTML = '<p class="text-gray-500 loading-pulse text-center">Loading...</p>';
+            
+            try {
+                const res = await fetch('/api/snoozed');
+                const data = await res.json();
+                
+                if (!data.snoozed || data.snoozed.length === 0) {
+                    document.getElementById('snoozed-content').innerHTML = `
+                        <div class="text-center py-8">
+                            <span class="text-4xl">😴</span>
+                            <p class="text-gray-500 mt-2">No snoozed emails</p>
+                            <p class="text-sm text-gray-400">Snooze emails to deal with them later</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = data.snoozed.map(item => `
+                    <div class="p-4 border rounded-lg flex items-center gap-4">
+                        <div class="flex-1">
+                            <p class="font-medium">Email ID: ${item.id.slice(0, 8)}...</p>
+                            <p class="text-sm text-gray-500">Snoozed until: ${new Date(item.until).toLocaleString()}</p>
+                        </div>
+                        <button onclick="unsnoozeEmail('${item.id}')" class="px-3 py-1 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200">
+                            Unsnooze
+                        </button>
+                    </div>
+                `).join('');
+                
+                document.getElementById('snoozed-content').innerHTML = `<div class="space-y-3">${html}</div>`;
+            } catch (err) {
+                console.error('Failed to load snoozed:', err);
+            }
+        }
+
+        function closeSnoozedModal() {
+            document.getElementById('snoozed-modal').classList.add('hidden');
+        }
+
+        async function unsnoozeEmail(emailId) {
+            try {
+                await fetch(`/api/email/${emailId}/unsnooze`, { method: 'POST' });
+                showSnoozed();
+                loadEmails();
+                loadFocusStats();
+            } catch (err) {
+                console.error('Failed to unsnooze:', err);
+            }
+        }
+
+        // Reminders modal
+        async function showReminders() {
+            document.getElementById('reminders-modal').classList.remove('hidden');
+            document.getElementById('reminders-content').innerHTML = '<p class="text-gray-500 loading-pulse text-center">Loading...</p>';
+            
+            try {
+                const res = await fetch('/api/reminders');
+                const data = await res.json();
+                
+                const all = [...(data.due || []), ...(data.active || [])];
+                
+                if (all.length === 0) {
+                    document.getElementById('reminders-content').innerHTML = `
+                        <div class="text-center py-8">
+                            <span class="text-4xl">⏰</span>
+                            <p class="text-gray-500 mt-2">No reminders set</p>
+                            <p class="text-sm text-gray-400">Set reminders on emails to follow up later</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = all.map(item => {
+                    const isDue = new Date(item.time) <= new Date();
+                    return `
+                        <div class="p-4 border rounded-lg ${isDue ? 'border-red-200 bg-red-50' : ''} flex items-center gap-4">
+                            <div class="flex-1">
+                                <p class="font-medium ${isDue ? 'text-red-800' : ''}">
+                                    ${isDue ? '🔔 DUE: ' : ''}Email ID: ${item.email_id.slice(0, 8)}...
+                                </p>
+                                <p class="text-sm text-gray-500">Reminder: ${new Date(item.time).toLocaleString()}</p>
+                                ${item.note ? `<p class="text-sm text-gray-600 mt-1">📝 ${escapeHtml(item.note)}</p>` : ''}
+                            </div>
+                            <button onclick="openEmail('${item.email_id}'); closeRemindersModal();" class="px-3 py-1 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200">
+                                View
+                            </button>
+                            <button onclick="deleteReminder('${item.email_id}')" class="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200">
+                                ✕
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+                
+                document.getElementById('reminders-content').innerHTML = `<div class="space-y-3">${html}</div>`;
+            } catch (err) {
+                console.error('Failed to load reminders:', err);
+            }
+        }
+
+        function closeRemindersModal() {
+            document.getElementById('reminders-modal').classList.add('hidden');
+        }
+
+        async function deleteReminder(emailId) {
+            try {
+                await fetch(`/api/reminder/${emailId}`, { method: 'DELETE' });
+                showReminders();
+                loadFocusStats();
+            } catch (err) {
+                console.error('Failed to delete reminder:', err);
+            }
+        }
+
+        // Request notification permission
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+    </script>
+</body>
+</html>
